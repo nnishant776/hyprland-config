@@ -9,7 +9,9 @@ function M.setup(o)
     local opts = o or {}
 
     ---@type KeybindSpec[]
-    local default_key_binds = {}
+    local default_key_binds = {
+        { key = M.MainMod .. "+ SHIFT + R", dispatcher = hl.dsp.exec_cmd("hyprctl reload"), options = {} },
+    }
 
     ---@type KeybindSpec[]
     local final_keybinds = utils.MergeList(default_key_binds, opts.keybinds, function(e) return e.key end)
