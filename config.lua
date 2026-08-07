@@ -263,8 +263,8 @@ M.graphics = {
 
 M.ui = {
     color = {
-        scheme = "auto",
-        palette = "catppuccin",
+        scheme = "auto", -- "auto" (detects system dark/light theme dynamically) | "dark" | "light"
+        palette = "catppuccin", -- "catppuccin" | "nord" | "everforest" | "gruvbox" | "solarized" | "tokyonight" | "custom"
     },
     font = {
         family = "SF Pro 11 @opcz=17",
@@ -317,11 +317,7 @@ M.ui = {
             gaps_in = 0,
             gaps_out = 0,
             border_size = 1;
-            color = {
-                -- active_border   = { colors = { "rgba(00000000)", "rgba(33ccffee)", "rgba(33ccffee)", "rgba(33ccffee)", "rgba(00ff99ee)", "rgba(00ff99ee)", "rgba(00ff99ee)" }, angle = 90 },
-                active_border   = { colors = { "rgba(ffff6633)", "rgba(33ccffee)", "rgba(33ccffee)", "rgba(33ccffee)", "rgba(33ccffee)", "rgba(33ccffee)", "rgba(33ccffee)" }, angle = 90 },
-                inactive_border = "rgba(595959aa)",
-            },
+            color = {},
             resize_on_border = true,
             extend_border_grab_area = 20,
         },

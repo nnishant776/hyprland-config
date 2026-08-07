@@ -12,7 +12,8 @@ function M.setup(o)
             col = opts.ui.window.border.color,
             snap = opts.ui.window.snapping,
             no_focus_fallback = opts.ui.window.focus.no_focus_fallback,
-        }
+        },
+        group = opts.ui.window.group,
     }
 
     hl.config(config)

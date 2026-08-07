@@ -1,6 +1,7 @@
 local M = {}
 
 function M.setup(o)
+    require('modules.ui.color').setup(o)
     require('modules.ui.layout').setup(o)
     require('modules.ui.window').setup(o)
     require('modules.ui.cursor').setup(o)
