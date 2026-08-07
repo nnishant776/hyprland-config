@@ -99,6 +99,10 @@ M.programs = {
     Menu = "hyprlauncher",
 }
 
+M.autostart = {
+    "waybar"
+}
+
 M.screens = {}
 
 M.keybinds = {

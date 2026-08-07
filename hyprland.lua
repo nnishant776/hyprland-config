@@ -24,11 +24,13 @@ local input = require('modules.input')
 local ui = require('modules.ui')
 local graphics = require('modules.graphics')
 local system = require('modules.system')
+local autostart = require('modules.autostart')
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 
 system.setup(cfg)
+autostart.setup(cfg)
 graphics.setup(cfg)
 monitors.setup(cfg)
 keybinds.setup(cfg)
