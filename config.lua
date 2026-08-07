@@ -112,7 +112,7 @@ M.keybinds = {
     { key = M.MainMod .. " + A",              dispatcher = hl.dsp.exec_cmd("hyprlauncher"),                                                 options = {} },
 
     -- Session Control
-    { key = "CTRL + ALT + DELETE",               dispatcher = hl.dsp.exec_cmd("loginctl terminate-user $USER"),                             options = {} },
+    { key = "CTRL + ALT + DELETE",            dispatcher = hl.dsp.exec_cmd("loginctl terminate-user $USER"),                                options = {} },
 
     -- Window Control
     { key = M.MainMod .. " + CTRL + Q",       dispatcher = hl.dsp.window.kill(),                                                            options = {} },
@@ -141,16 +141,16 @@ M.keybinds = {
     { key = M.MainMod .. " + mouse_up",       dispatcher = hl.dsp.focus({ workspace = "e-1" }),                                             options = {} },
 
     -- Multimedia Controls
-    { key = "XF86AudioRaiseVolume",              dispatcher = hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),            options = { locked = true, repeating = true } },
-    { key = "XF86AudioLowerVolume",              dispatcher = hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%-"),            options = { locked = true, repeating = true } },
-    { key = "XF86AudioMute",                     dispatcher = hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),                options = { locked = true, repeating = true } },
-    { key = "XF86AudioMicMute",                  dispatcher = hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),              options = { locked = true, repeating = true } },
-    { key = "XF86AudioNext",                     dispatcher = hl.dsp.exec_cmd("playerctl next"),                                            options = { locked = true, repeating = true } },
-    { key = "XF86AudioPrev",                     dispatcher = hl.dsp.exec_cmd("playerctl previous"),                                        options = { locked = true, repeating = true } },
-    { key = "XF86AudioPlay",                     dispatcher = hl.dsp.exec_cmd("playerctl play-pause"),                                      options = { locked = true, repeating = true } },
-    { key = "XF86AudioPause",                    dispatcher = hl.dsp.exec_cmd("playerctl play-pause"),                                      options = { locked = true, repeating = true } },
-    { key = "XF86MonBrightnessUp",               dispatcher = hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"),                             options = { locked = true, repeating = true } },
-    { key = "XF86MonBrightnessDown",             dispatcher = hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"),                             options = { locked = true, repeating = true } },
+    { key = "XF86AudioRaiseVolume",           dispatcher = hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),               options = { locked = true, repeating = true } },
+    { key = "XF86AudioLowerVolume",           dispatcher = hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%-"),               options = { locked = true, repeating = true } },
+    { key = "XF86AudioMute",                  dispatcher = hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),                   options = { locked = true, repeating = true } },
+    { key = "XF86AudioMicMute",               dispatcher = hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),                 options = { locked = true, repeating = true } },
+    { key = "XF86AudioNext",                  dispatcher = hl.dsp.exec_cmd("playerctl next"),                                               options = { locked = true, repeating = true } },
+    { key = "XF86AudioPrev",                  dispatcher = hl.dsp.exec_cmd("playerctl previous"),                                           options = { locked = true, repeating = true } },
+    { key = "XF86AudioPlay",                  dispatcher = hl.dsp.exec_cmd("playerctl play-pause"),                                         options = { locked = true, repeating = true } },
+    { key = "XF86AudioPause",                 dispatcher = hl.dsp.exec_cmd("playerctl play-pause"),                                         options = { locked = true, repeating = true } },
+    { key = "XF86MonBrightnessUp",            dispatcher = hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"),                                options = { locked = true, repeating = true } },
+    { key = "XF86MonBrightnessDown",          dispatcher = hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"),                                options = { locked = true, repeating = true } },
 }
 
 M.system = {
