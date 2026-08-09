@@ -131,6 +131,29 @@ local palettes = {
             groupbar_inactive = "rgba(f5f6f9ee)",
             shadow = "rgba(00000015)",
         }
+    },
+    -- One Dark / One Light  (Atom-inspired)
+    one = {
+        dark = {
+            -- One Dark: blue #61afef, purple #c678dd, inactive surface #3e4452
+            active_border   = make_top_fade_gradient("rgba(61afefee)"),
+            inactive_border = "rgba(3e4452aa)",
+            group_border_active = "rgba(61afefee)",
+            group_border_inactive = "rgba(3e4452aa)",
+            groupbar_active = "rgba(61afefee)",
+            groupbar_inactive = "rgba(282c34ee)",
+            shadow = "rgba(00000066)",
+        },
+        light = {
+            -- One Light: blue #4078f2, purple #a626a4, inactive surface #d3d3d3
+            active_border   = make_top_fade_gradient("rgba(4078f2ee)"),
+            inactive_border = "rgba(d3d3d3aa)",
+            group_border_active = "rgba(4078f2ee)",
+            group_border_inactive = "rgba(d3d3d3aa)",
+            groupbar_active = "rgba(4078f2ee)",
+            groupbar_inactive = "rgba(fafafaee)",
+            shadow = "rgba(00000018)",
+        }
     }
 }
 
