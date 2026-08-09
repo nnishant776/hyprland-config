@@ -204,6 +204,28 @@ M.keybinds = {
     { key = "XF86AudioPause",                 dispatcher = hl.dsp.exec_cmd("playerctl play-pause"),                                         options = { locked = true, repeating = true } },
     { key = "XF86MonBrightnessUp",            dispatcher = hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"),                                options = { locked = true, repeating = true } },
     { key = "XF86MonBrightnessDown",          dispatcher = hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"),                                options = { locked = true, repeating = true } },
+
+    -- Screen Controls
+    {
+        key = M.MainMod .. " + Z",
+        dispatcher = function()
+            local zoomOffset = 0.1
+            local currentZoom = hl.get_config("cursor.zoom_factor")
+            currentZoom = currentZoom + zoomOffset
+            hl.config({ cursor = { zoom_factor = currentZoom } })
+        end,
+        options = { repeating = true },
+    },
+    {
+        key = M.MainMod .. " + SHIFT + Z",
+        dispatcher = function()
+            local zoomOffset = -0.1
+            local currentZoom = hl.get_config("cursor.zoom_factor")
+            currentZoom = currentZoom + zoomOffset
+            hl.config({ cursor = { zoom_factor = currentZoom } })
+        end,
+        options = { repeating = true },
+    }
 }
 
 M.system = {
