@@ -200,7 +200,7 @@ local function get_system_scheme()
         result = result:gsub("%s+", "")
         if result == "'prefer-dark'" then
             return "dark"
-        elseif result == "'prefer-light'" then
+        elseif result == "'default'" then
             return "light"
         end
     end
@@ -260,6 +260,31 @@ local function apply_colors(palette_name, scheme_name, custom_config)
     }
 
     hl.config(config)
+
+    -- Custom actions for applications that don't support dynamic themeing
+    -- Update Alacritty theme by rewriting the import path in alacritty.toml
+    local home = os.getenv("HOME")
+    local alacritty_cfg = home .. "/.config/alacritty/alacritty.toml"
+    local theme_filename = palette_name .. "_" .. scheme_name .. ".toml"
+    local theme_path = "~/.config/alacritty/themes/themes/" .. theme_filename
+
+    local f_in = io.open(alacritty_cfg, "r")
+    if f_in then
+        local content = f_in:read("*a")
+        f_in:close()
+        -- Replace any existing themes/themes/<name>.toml import line
+        local new_content = content:gsub(
+            '"[^"]*themes/themes/[^"]*%.toml"',
+            '"' .. theme_path .. '"'
+        )
+        if new_content ~= content then
+            local f_out = io.open(alacritty_cfg, "w")
+            if f_out then
+                f_out:write(new_content)
+                f_out:close()
+            end
+        end
+    end
 end
 
 function M.setup(o)
