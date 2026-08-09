@@ -18,6 +18,15 @@ function M.setup(o)
 
     for _, bindCfg in ipairs(final_keybinds) do
         hl.bind(bindCfg.key, bindCfg.dispatcher, bindCfg.options)
+        if bindCfg.submaps then
+            hl.define_submap(bindCfg.submapKey, function()
+                for _, submapCfg in ipairs(bindCfg.submaps) do
+                    hl.bind(submapCfg.key, submapCfg.dispatcher, submapCfg.options)
+                end
+            end)
+        else
+
+        end
     end
 
     for i = 1, 10 do

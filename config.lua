@@ -129,10 +129,63 @@ M.keybinds = {
     { key = M.MainMod .. " + Down",           dispatcher = hl.dsp.window.move({ direction = "down" }),                                      options = {} },
     { key = M.MainMod .. " + Up",             dispatcher = hl.dsp.window.move({ direction = "up" }),                                        options = {} },
     { key = M.MainMod .. " + Right",          dispatcher = hl.dsp.window.move({ direction = "right" }),                                     options = {} },
+    {
+        key = M.MainMod .. " + SHIFT + Left",  -- Only for scrolling layout
+        dispatcher = function()
+            if M.ui.layout.name == "scrolling" then
+                hl.dispatch(hl.dsp.layout("swapcol l"))
+            end
+        end,
+        options = {},
+    },
+    {
+        key = M.MainMod .. " + SHIFT + Right",  -- Only for scrolling layout
+        dispatcher = function()
+            if M.ui.layout.name == "scrolling" then
+                hl.dispatch(hl.dsp.layout("swapcol r"))
+            end
+        end,
+        options = {},
+    },
+    {
+        key = M.MainMod .. " + SHIFT + Equal",
+        dispatcher = function()
+            if M.ui.layout.name == "scrolling" then
+                hl.dispatch(hl.dsp.layout("colresize +conf"))
+            else
+                hl.dsp.window.move({ direction = "right" })
+            end
+        end,
+        options = {},
+    },
+    {
+        key = M.MainMod .. " + SHIFT + Minus",
+        dispatcher = function()
+            if M.ui.layout.name == "scrolling" then
+                hl.dispatch(hl.dsp.layout("colresize -conf"))
+            else
+                hl.dsp.window.move({ direction = "right" })
+            end
+        end,
+        options = {},
+    },
     { key = M.MainMod .. " + CTRL + T",       dispatcher = hl.dsp.group.toggle(),                                                           options = {} },
     { key = M.MainMod .. " + SHIFT + H",      dispatcher = hl.dsp.group.move_window(),                                                      options = {} },
     { key = M.MainMod .. " + mouse:272",      dispatcher = hl.dsp.window.drag(),                                                            options = { mouse = true} },
     { key = M.MainMod .. " + mouse:273",      dispatcher = hl.dsp.window.resize(),                                                          options = { mouse = true} },
+    {
+        key = M.MainMod .. " + ALT + R",
+        dispatcher = hl.dsp.submap("resize"),
+        options = {},
+        submapKey = "resize",
+        submaps = {
+            { key = "left",      dispatcher = hl.dsp.window.resize({ x = -10, y = 0, relative = true }), options = { repeating = true } },
+            { key = "right",     dispatcher = hl.dsp.window.resize({ x = 10, y = 0, relative = true }),  options = { repeating = true } },
+            { key = "down",      dispatcher = hl.dsp.window.resize({ x = 0, y = 10, relative = true }),  options = { repeating = true } },
+            { key = "up",        dispatcher = hl.dsp.window.resize({ x = 0, y = -10, relative = true }), options = { repeating = true } },
+            { key = "escape",    dispatcher = hl.dsp.submap("reset"),                                    options = { repeating = true } },
+        },
+    },
 
     -- Workspace Controls
     { key = M.MainMod .. " + Page_Down",      dispatcher = hl.dsp.focus({ workspace = "r+1" }),                                             options = {} },
@@ -311,6 +364,8 @@ M.ui = {
         },
         scrolling = {
             fullscreen_on_one_column = true,
+            wrap_focus = false,
+            wrap_swapcol = false,
         },
         dwindle = {
             preserve_split = true, -- You probably want this
