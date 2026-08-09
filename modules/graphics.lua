@@ -6,7 +6,10 @@ function M.setup(o)
     local config = {
         general = {
             allow_tearing = opts.graphics.allow_tearing,
-        }
+        },
+        misc = {
+            vrr = opts.graphics.vrr,
+        },
     }
 
     hl.config(config)

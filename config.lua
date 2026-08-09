@@ -338,6 +338,7 @@ M.input = {
 
 M.graphics = {
     allow_tearing = false,
+    vrr = 0,
 }
 
 M.ui = {
