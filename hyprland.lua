@@ -17,6 +17,7 @@ package.path = home .. "/.luarocks/share/lua/5.2/?.lua;" .. home .. "/.luarocks/
 package.cpath = home .. "/.luarocks/lib/lua/5.2/?.so;" .. package.cpath
 
 local cfg = require('config')
+cfg.init()
 
 local monitors = require('modules.monitors')
 local keybinds = require('modules.keybinds')
@@ -28,6 +29,8 @@ local autostart = require('modules.autostart')
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+hl.env("QT_QUICK_BACKEND", "vulkan")
 
 system.setup(cfg)
 autostart.setup(cfg)
@@ -36,6 +39,8 @@ monitors.setup(cfg)
 keybinds.setup(cfg)
 input.setup(cfg)
 ui.setup(cfg)
+
+require('override')
 
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
 
@@ -372,3 +377,6 @@ ui.setup(cfg)
 --     move  = "20 monitor_h-120",
 --     float = true,
 -- })
+
+-- For Noctalia Color templates
+require("noctalia").apply_theme()

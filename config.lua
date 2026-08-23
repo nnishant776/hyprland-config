@@ -73,15 +73,24 @@
 ---@field border BorderConfigSpec
 
 ---@class UIConfigSpec
+---@field customShells CustomShellSpec
 ---@field animation AnimationConfigSpec
 ---@field font FontConfigSpec
 ---@field layout LayoutConfigSpec
 
----@class SystemConfigSpec
+---@class CustomShellSpec
+---@field variant string
+---@field variantRegistry table<string, CustomShellVariantSpec>
+
+---@class CustomShellVariantSpec
+---@field startCmd string[]
+
+--@class SystemConfigSpec
 ---@field timezone string
 ---@field local string
 
 ---@class HyprlandConfig
+---@field autostart string[]
 ---@field screens HL.MonitorSpec[]
 ---@field programs DesignatedPrograms
 ---@field keybinds KeybindSpec[]
@@ -100,7 +109,8 @@ M.programs = {
 }
 
 M.autostart = {
-    "waybar"
+    -- "waybar",
+    -- "hypridle",
 }
 
 M.screens = {}
@@ -342,9 +352,20 @@ M.graphics = {
 }
 
 M.ui = {
+    customShells = {
+        variant = "noctalia",
+        variantRegistry = {
+            noctalia = {
+                startCmd = { "noctalia" },
+            },
+            caelestica = {
+                startCmd = { "caelestia-shell" },
+            },
+        },
+    },
     color = {
         scheme = "auto", -- "auto" (detects system dark/light theme dynamically) | "dark" | "light"
-        palette = "catppuccin", -- "catppuccin" | "nord" | "everforest" | "gruvbox" | "solarized" | "tokyonight" | "custom"
+        palette = "one", -- "catppuccin" | "nord" | "everforest" | "gruvbox" | "solarized" | "tokyonight" | "custom"
     },
     font = {
         family = "SF Pro 11 @opcz=17",
@@ -526,5 +547,15 @@ M.ui = {
         },
     },
 }
+
+function M.init()
+    if M.ui.customShells.variant ~= "" and M.ui.customShells.variant ~= "none" then
+        local variantInfo = M.ui.customShells.variantRegistry[M.ui.customShells.variant]
+        if variantInfo then
+            local cmd = table.concat(variantInfo.startCmd, " ")
+            table.insert(M.autostart, cmd)
+        end
+    end
+end
 
 return M
