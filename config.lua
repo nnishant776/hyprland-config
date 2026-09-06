@@ -117,9 +117,9 @@ M.screens = {}
 
 M.keybinds = {
     -- Application Launch
-    { key = M.MainMod .. " + Return",         dispatcher = hl.dsp.exec_cmd("alacritty"),                                                    options = {} },
-    { key = M.MainMod .. " + E",              dispatcher = hl.dsp.exec_cmd("nautilus"),                                                     options = {} },
-    { key = M.MainMod .. " + A",              dispatcher = hl.dsp.exec_cmd("hyprlauncher"),                                                 options = {} },
+    { key = M.MainMod .. " + Return",         dispatcher = hl.dsp.exec_cmd(M.programs.Terminal),                                            options = {} },
+    { key = M.MainMod .. " + E",              dispatcher = hl.dsp.exec_cmd(M.programs.FileManager),                                         options = {} },
+    { key = M.MainMod .. " + A",              dispatcher = hl.dsp.exec_cmd(M.programs.Menu),                                                options = {} },
 
     -- Session Control
     { key = "CTRL + ALT + DELETE",            dispatcher = hl.dsp.exec_cmd("loginctl terminate-user $USER"),                                options = {} },
