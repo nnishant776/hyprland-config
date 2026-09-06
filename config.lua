@@ -558,6 +558,8 @@ M.ui = {
 }
 
 function M.init()
+    pcall(require, 'runtime')
+
     if M.ui.customShells.variant ~= "" and M.ui.customShells.variant ~= "none" then
         local variantInfo = M.ui.customShells.variantRegistry[M.ui.customShells.variant]
         if variantInfo then
