@@ -520,6 +520,7 @@ M.ui = {
     },
     cursor = {
         enable_hyprcursor = false,
+		hide_on_key_press = true,
     },
     decoration = {
         rounding       = 0,
