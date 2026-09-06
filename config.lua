@@ -361,6 +361,9 @@ M.ui = {
             caelestica = {
                 startCmd = { "caelestia-shell" },
             },
+            dms = {
+                startCmd = { "dms", "run" },
+            },
         },
     },
     color = {
