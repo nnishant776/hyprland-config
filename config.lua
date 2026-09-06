@@ -72,11 +72,16 @@
 ---@class WindowConfigSpec
 ---@field border BorderConfigSpec
 
+---@class CursorConfigSpec
+---@field enable_hyprcursor boolean
+---@field hide_on_key_press boolean
+
 ---@class UIConfigSpec
 ---@field customShells CustomShellSpec
 ---@field animation AnimationConfigSpec
 ---@field font FontConfigSpec
 ---@field layout LayoutConfigSpec
+---@field cursor CursorConfigSpec
 
 ---@class CustomShellSpec
 ---@field variant string
@@ -85,7 +90,7 @@
 ---@class CustomShellVariantSpec
 ---@field startCmd string[]
 
---@class SystemConfigSpec
+---@class SystemConfigSpec
 ---@field timezone string
 ---@field local string
 
