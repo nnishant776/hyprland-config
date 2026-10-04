@@ -352,6 +352,7 @@ M.input = {
 }
 
 M.graphics = {
+    force_zero_scaling = true,
     allow_tearing = false,
     vrr = 0,
 }

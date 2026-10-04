@@ -10,6 +10,9 @@ function M.setup(o)
         misc = {
             vrr = opts.graphics.vrr,
         },
+        xwayland = {
+            force_zero_scaling = opts.graphics.force_zero_scaling
+        }
     }
 
     hl.config(config)
