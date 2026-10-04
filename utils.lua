@@ -101,4 +101,21 @@ function M.MergeDict(d1, d2, behaviour, deepcopy)
     return result
 end
 
+function M.LoadPluginsFromDir(dir)
+    if not dir then
+        return
+    end
+
+    local handle = io.popen("ls " .. dir .. "/*.so 2>/dev/null")
+    if not handle then return end
+
+    for plugin_path in handle:lines() do
+        if plugin_path and plugin_path ~= "" then
+            hl.exec_cmd("hyprctl plugin load " .. plugin_path)
+            print("[Hyprland Config] Automatically loaded: " .. plugin_path)
+        end
+    end
+    handle:close()
+end
+
 return M
