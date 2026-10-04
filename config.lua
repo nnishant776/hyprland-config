@@ -110,8 +110,8 @@ local M = {
 }
 
 M.programs = {
-    Terminal = "alacritty",
     FileManager = "nautilus",
+    Terminal = "kitty",
     Menu = "hyprlauncher",
 }
 
