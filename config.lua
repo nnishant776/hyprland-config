@@ -94,12 +94,18 @@
 ---@field timezone string
 ---@field local string
 
+---@class GraphicsConfigSpec
+---@field force_zero_scaling boolean
+---@field allow_tearing boolean
+---@field vrr number
+
 ---@class HyprlandConfig
 ---@field autostart string[]
 ---@field screens HL.MonitorSpec[]
 ---@field programs DesignatedPrograms
 ---@field keybinds KeybindSpec[]
 ---@field input InputConfigSpec
+---@field graphics GraphicsConfigSpec
 ---@field ui UIConfigSpec
 
 local utils = require('utils')
