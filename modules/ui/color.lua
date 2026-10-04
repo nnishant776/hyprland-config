@@ -219,6 +219,38 @@ local function get_system_scheme()
     return "dark"
 end
 
+local function get_current_cursor_theme()
+    local cursor_theme_handle, cmd_error = io.popen("gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null")
+    if not cursor_theme_handle then
+        print("Failed to read cursor theme from gsettings")
+        return ""
+    end
+
+    local cursor_theme = cursor_theme_handle:read("*a")
+    local success, exit_type, code = cursor_theme_handle:close()
+    if success then
+        return cursor_theme
+    end
+
+    print("Failed to read cursor theme from gsettings: " .. cmd_error .. ", code: " .. code)
+
+    -- Fall back to dconf
+    cursor_theme_handle = io.popen("dconf read /org/gnome/desktop/interface/icon-theme")
+    if not cursor_theme_handle then
+        print("Failed to read cursor theme from dconf")
+	    return ""
+    end
+
+    cursor_theme = cursor_theme_handle:read("*a")
+    success, exit_type, code = cursor_theme_handle:close()
+    if not success then
+        print("Failed to read cursor theme from dconf: " .. cmd_error .. ", code: " .. code)
+        return ""
+    end
+
+    return cursor_theme
+end
+
 local function apply_colors(palette_name, scheme_name, custom_config)
     local palette = palettes[palette_name]
     if palette_name == "custom" and custom_config then
@@ -283,6 +315,38 @@ local function apply_colors(palette_name, scheme_name, custom_config)
                 f_out:write(new_content)
                 f_out:close()
             end
+        end
+    end
+
+    -- Update the cursor icon theem
+    local cursor_theme = get_current_cursor_theme()
+    if cursor_theme ~= "" then
+        local text = cursor_theme
+
+        -- Replace the occurrence of light/dark with the opposite value
+        if scheme_name == "dark" then
+            local target_substrings = { "dark", "night", "black" }
+            local replacement = { "light", "day", "white" }
+            -- Loop through each target and replace it
+            for i, target in ipairs(target_substrings) do
+                -- Use a helper function to escape magic characters if needed,
+                -- or ensure your targets don't contain them.
+                local pattern = target:gsub("([%^%$%%%.%[%]%*%+%-%?])", "%%%1")
+                text = string.gsub(text, pattern, replacement[i])
+            end
+            os.execute("gsettings set org.gnome.desktop.interface icon-theme " .. text)
+        elseif scheme_name == "light" then
+            text = cursor_theme
+            local replacement = { "dark", "night", "black" }
+            local target_substrings = { "light", "day", "white" }
+            -- Loop through each target and replace it
+            for i, target in ipairs(target_substrings) do
+                -- Use a helper function to escape magic characters if needed,
+                -- or ensure your targets don't contain them.
+                local pattern = target:gsub("(%^%$%%%.%[%]%*%+%-%?)", "%%%1")
+                text = string.gsub(text, pattern, replacement[i])
+            end
+            os.execute("gsettings set org.gnome.desktop.interface icon-theme " .. text)
         end
     end
 end
@@ -351,36 +415,36 @@ function M.setup(o)
             local bus = Gio.bus_get_sync(Gio.BusType.SESSION, nil)
             if bus then
                 local success = pcall(function()
-                    bus:signal_subscribe(
-                        "org.freedesktop.portal.Desktop",
-                        "org.freedesktop.portal.Settings",
-                        "SettingChanged",
-                        "/org/freedesktop/portal/desktop",
-                        nil,
-                        Gio.DBusSignalFlags.NONE,
-                        function(conn, sender, path, interface, signal, parameters)
-                            local namespace = parameters:get_child_value(0):get_string()
-                            local key = parameters:get_child_value(1):get_string()
-                            local val_variant = parameters:get_child_value(2):get_variant()
-                            local val = val_variant.value or val_variant:get_uint32()
+                                          bus:signal_subscribe(
+                                              "org.freedesktop.portal.Desktop",
+                                              "org.freedesktop.portal.Settings",
+                                              "SettingChanged",
+                                              "/org/freedesktop/portal/desktop",
+                                              nil,
+                                          Gio.DBusSignalFlags.NONE,
+                                              function(conn, sender, path, interface, signal, parameters)
+                                                  local namespace = parameters:get_child_value(0):get_string()
+                                                  local key = parameters:get_child_value(1):get_string()
+                                                  local val_variant = parameters:get_child_value(2):get_variant()
+                                                  local val = val_variant.value or val_variant:get_uint32()
 
-                            if namespace == "org.freedesktop.appearance" and key == "color-scheme" then
-                                local new_scheme = (val == 1) and "dark" or "light"
-                                if new_scheme ~= current_scheme then
-                                    current_scheme = new_scheme
-                                    apply_colors(palette_name, new_scheme, custom_config)
-                                end
-                            end
-                        end
-                    )
-                end)
+                                                  if namespace == "org.freedesktop.appearance" and key == "color-scheme" then
+                                                      local new_scheme = (val == 1) and "dark" or "light"
+                                                      if new_scheme ~= current_scheme then
+                                                          current_scheme = new_scheme
+                                                          apply_colors(palette_name, new_scheme, custom_config)
+                                                      end
+                                                  end
+                                              end
+                                          )
+                                      end)
                 if success then
                     dbus_subscribed = true
                     -- Start a non-blocking timer to iterate the GLib main context
                     local context = GLib.MainContext.default()
                     hl.timer(function()
-                        while context:iteration(false) do end
-                    end, { timeout = 1000, type = "repeat" })
+                                 while context:iteration(false) do end
+                             end, { timeout = 1000, type = "repeat" })
                 end
             end
         end
@@ -388,12 +452,12 @@ function M.setup(o)
         -- Fallback polling if DBus library is not available or connection failed
         if not dbus_subscribed then
             hl.timer(function()
-                local new_scheme = get_system_scheme()
-                if new_scheme ~= current_scheme then
-                    current_scheme = new_scheme
-                    apply_colors(palette_name, new_scheme, custom_config)
-                end
-            end, { timeout = 3000, type = "repeat" })
+                         local new_scheme = get_system_scheme()
+                         if new_scheme ~= current_scheme then
+                             current_scheme = new_scheme
+                             apply_colors(palette_name, new_scheme, custom_config)
+                         end
+                     end, { timeout = 3000, type = "repeat" })
         end
     end
 end
