@@ -102,6 +102,8 @@
 ---@field input InputConfigSpec
 ---@field ui UIConfigSpec
 
+local utils = require('utils')
+
 ---@class HyprlandConfig
 local M = {
     MainMod = "SUPER",
