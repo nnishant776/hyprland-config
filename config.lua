@@ -367,7 +367,6 @@ M.graphics = {
 
 M.ui = {
     customShells = {
-        variant = "noctalia",
         variantRegistry = {
             noctalia = {
                 startCmd = { "noctalia" },
