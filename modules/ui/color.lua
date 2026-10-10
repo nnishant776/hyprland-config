@@ -157,98 +157,90 @@ local palettes = {
     }
 }
 
+-- dconf is used instead of gsettings since it doesn't need the GSettings schemas in XDG_DATA_DIRS
+local SCHEME_KEY = "/org/gnome/desktop/interface/color-scheme"
+local CURSOR_KEY = "/org/gnome/desktop/interface/cursor-theme"
+
+-- Calls M.refresh() inside Hyprland on every color-scheme change. hyprctl only fails once
+-- Hyprland is gone (Lua errors still exit 0), which stops the watcher.
+local WATCHER_CMD = "dconf watch " .. SCHEME_KEY .. [[ | while read -r line; do case "$line" in /*) ]]
+    .. [[hyprctl eval "require('modules.ui.color').refresh()" >/dev/null 2>&1 || exit 0 ;; esac; done]]
+
+-- Substring swaps that give the cursor theme the opposite variant of the color scheme
+local cursor_swaps = {
+    dark = { { "dark", "light" }, { "night", "day" }, { "black", "white" } },
+    light = { { "light", "dark" }, { "day", "night" }, { "white", "black" } },
+}
+
+-- Kept at module level so M.refresh() can re-apply with the settings from setup()
 local current_scheme = nil
+local auto_scheme = false
+local current_palette_name = nil
+local current_custom_config = nil
 
-local function get_system_scheme()
-    -- 1. Try DBus using GIO if lgi is available
-    local has_lgi, lgi = pcall(require, "lgi")
-    if has_lgi then
-        local GLib = lgi.GLib
-        local Gio = lgi.Gio
-        local bus = Gio.bus_get_sync(Gio.BusType.SESSION, nil)
-        if bus then
-            local success, reply = pcall(function()
-                return bus:call_sync(
-                    "org.freedesktop.portal.Desktop",
-                    "/org/freedesktop/portal/desktop",
-                    "org.freedesktop.portal.Settings",
-                    "Read",
-                    GLib.Variant("(ss)", { "org.freedesktop.appearance", "color-scheme" }),
-                    nil,
-                    Gio.DBusCallFlags.NONE,
-                    -1,
-                    nil
-                )
-            end)
-            if success and reply then
-                local val_variant = reply:get_child_value(0):get_variant()
-                local val = val_variant.value or val_variant:get_uint32()
-                if val == 1 then
-                    return "dark"
-                elseif val == 2 then
-                    return "light"
-                end
-            end
-        end
-    end
+-- Shell-specific extras (see customisations/), run with the scheme name on every change
+local scheme_hooks = {}
 
-    -- 2. Fallback to gsettings color-scheme
-    local handle = io.popen("gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null")
-    if handle then
-        local result = handle:read("*a")
-        handle:close()
-        result = result:gsub("%s+", "")
-        if result == "'prefer-dark'" then
-            return "dark"
-        elseif result == "'default'" then
-            return "light"
-        end
-    end
-
-    -- 3. Fallback to gsettings gtk-theme name check
-    local handle_gtk = io.popen("gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null")
-    if handle_gtk then
-        local result = handle_gtk:read("*a")
-        handle_gtk:close()
-        result = result:lower()
-        if result:find("dark") or result:find("night") or result:find("black") or result:find("nord") or result:find("dracula") then
-            return "dark"
-        end
-    end
-
-    return "dark"
+local function shell_quote(s)
+    return "'" .. s:gsub("'", "'\\''") .. "'"
 end
 
-local function get_current_cursor_theme()
-    local cursor_theme_handle, cmd_error = io.popen("gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null")
-    if not cursor_theme_handle then
-        print("Failed to read cursor theme from gsettings")
-        return ""
+---@param key string
+---@return string|nil value GVariant text such as "'prefer-dark'", "" if unset, nil on failure
+local function dconf_read(key)
+    -- close() can't report the exit status inside Hyprland since it reaps children itself
+    -- (ECHILD), so the shell appends the status to the output instead
+    local handle = io.popen("dconf read " .. key .. " 2>/dev/null; echo $?")
+    if not handle then
+        return nil
     end
 
-    local cursor_theme = cursor_theme_handle:read("*a")
-    local success, exit_type, code = cursor_theme_handle:close()
-    if success then
-        return cursor_theme
+    local output = handle:read("*a")
+    handle:close()
+
+    local value, status = output:match("^(.-)%s*(%d+)%s*$")
+    if status ~= "0" then
+        return nil
     end
 
-    print("Failed to read cursor theme from gsettings: " .. cmd_error .. ", code: " .. code)
+    return value
+end
 
-    -- Fall back to dconf
-    cursor_theme_handle = io.popen("dconf read /org/gnome/desktop/interface/icon-theme")
-    if not cursor_theme_handle then
-        print("Failed to read cursor theme from dconf")
-	    return ""
+---@param key string
+---@param value string GVariant text such as "'Adwaita'"
+local function dconf_write(key, value)
+    os.execute("dconf write " .. key .. " " .. shell_quote(value))
+end
+
+local function get_system_scheme()
+    local value = dconf_read(SCHEME_KEY)
+    if value == nil then
+        return current_scheme or "dark"
     end
 
-    cursor_theme = cursor_theme_handle:read("*a")
-    success, exit_type, code = cursor_theme_handle:close()
-    if not success then
-        print("Failed to read cursor theme from dconf: " .. cmd_error .. ", code: " .. code)
-        return ""
+    -- 'prefer-light', 'default' and unset all mean light
+    return value == "'prefer-dark'" and "dark" or "light"
+end
+
+local function update_cursor_theme(scheme_name)
+    local value = dconf_read(CURSOR_KEY)
+    if not value or value == "" then
+        return
     end
 
-    return cursor_theme
+    local theme = value:gsub("^'(.*)'$", "%1")
+    local new_theme = theme
+    for _, swap in ipairs(cursor_swaps[scheme_name] or {}) do
+        new_theme = new_theme:gsub(swap[1], swap[2])
+    end
+    if new_theme == theme then
+        return
+    end
+
+    -- dconf for GTK apps, setcursor for Hyprland itself. setcursor must go through
+    -- hl.exec_cmd: a blocking os.execute would deadlock waiting on Hyprland's own socket.
+    dconf_write(CURSOR_KEY, "'" .. new_theme .. "'")
+    hl.exec_cmd("hyprctl setcursor " .. shell_quote(new_theme) .. " " .. (os.getenv("XCURSOR_SIZE") or "24"))
 end
 
 local function apply_colors(palette_name, scheme_name, custom_config)
@@ -318,36 +310,46 @@ local function apply_colors(palette_name, scheme_name, custom_config)
         end
     end
 
-    -- Update the cursor icon theem
-    local cursor_theme = get_current_cursor_theme()
-    if cursor_theme ~= "" then
-        local text = cursor_theme
+    update_cursor_theme(scheme_name)
 
-        -- Replace the occurrence of light/dark with the opposite value
-        if scheme_name == "dark" then
-            local target_substrings = { "dark", "night", "black" }
-            local replacement = { "light", "day", "white" }
-            -- Loop through each target and replace it
-            for i, target in ipairs(target_substrings) do
-                -- Use a helper function to escape magic characters if needed,
-                -- or ensure your targets don't contain them.
-                local pattern = target:gsub("([%^%$%%%.%[%]%*%+%-%?])", "%%%1")
-                text = string.gsub(text, pattern, replacement[i])
-            end
-            os.execute("gsettings set org.gnome.desktop.interface icon-theme " .. text)
-        elseif scheme_name == "light" then
-            text = cursor_theme
-            local replacement = { "dark", "night", "black" }
-            local target_substrings = { "light", "day", "white" }
-            -- Loop through each target and replace it
-            for i, target in ipairs(target_substrings) do
-                -- Use a helper function to escape magic characters if needed,
-                -- or ensure your targets don't contain them.
-                local pattern = target:gsub("(%^%$%%%.%[%]%*%+%-%?)", "%%%1")
-                text = string.gsub(text, pattern, replacement[i])
-            end
-            os.execute("gsettings set org.gnome.desktop.interface icon-theme " .. text)
-        end
+    for _, hook in ipairs(scheme_hooks) do
+        hook(scheme_name)
+    end
+end
+
+M.dconf_read = dconf_read
+M.dconf_write = dconf_write
+
+--- Registers hook(scheme_name), called right away with the current scheme and again on every
+--- change. Config reloads start from a fresh Lua state, so hooks never pile up.
+---@param hook fun(scheme_name: string)
+function M.on_scheme_change(hook)
+    table.insert(scheme_hooks, hook)
+    if current_scheme then
+        hook(current_scheme)
+    end
+end
+
+--- Re-reads the system color scheme and re-applies colors if it changed.
+--- Called by the dconf watcher through `hyprctl eval`.
+function M.refresh()
+    -- DMS writes 'default' (no preference) for light mode. Chromium reads that as
+    -- "judge the GTK theme", judged at the instant the value changes, before the
+    -- scheme hooks below have swapped gtk-theme to the light variant, and it does
+    -- not judge again: it stays dark after every light toggle. 'prefer-light' is
+    -- explicit, DMS leaves it alone, and the watcher re-fires once for this write.
+    if dconf_read(SCHEME_KEY) == "'default'" then
+        dconf_write(SCHEME_KEY, "'prefer-light'")
+    end
+
+    if not auto_scheme then
+        return
+    end
+
+    local new_scheme = get_system_scheme()
+    if new_scheme ~= current_scheme then
+        current_scheme = new_scheme
+        apply_colors(current_palette_name, new_scheme, current_custom_config)
     end
 end
 
@@ -358,9 +360,13 @@ function M.setup(o)
     local palette_name = color_opts.palette or "catppuccin"
     local custom_config = color_opts.custom
 
+    auto_scheme = scheme_mode == "auto"
+    current_palette_name = palette_name
+    current_custom_config = custom_config
+
     -- Resolve initial scheme
     local active_scheme = "dark"
-    if scheme_mode == "auto" then
+    if auto_scheme then
         active_scheme = get_system_scheme()
     else
         active_scheme = scheme_mode
@@ -404,61 +410,12 @@ function M.setup(o)
         opts.ui.decoration.shadow.color = colors.shadow
     end
 
-    -- If auto, register DBus listener or fall back to polling
-    if scheme_mode == "auto" then
-        local has_lgi, lgi = pcall(require, "lgi")
-        local dbus_subscribed = false
-
-        if has_lgi then
-            local GLib = lgi.GLib
-            local Gio = lgi.Gio
-            local bus = Gio.bus_get_sync(Gio.BusType.SESSION, nil)
-            if bus then
-                local success = pcall(function()
-                                          bus:signal_subscribe(
-                                              "org.freedesktop.portal.Desktop",
-                                              "org.freedesktop.portal.Settings",
-                                              "SettingChanged",
-                                              "/org/freedesktop/portal/desktop",
-                                              nil,
-                                          Gio.DBusSignalFlags.NONE,
-                                              function(conn, sender, path, interface, signal, parameters)
-                                                  local namespace = parameters:get_child_value(0):get_string()
-                                                  local key = parameters:get_child_value(1):get_string()
-                                                  local val_variant = parameters:get_child_value(2):get_variant()
-                                                  local val = val_variant.value or val_variant:get_uint32()
-
-                                                  if namespace == "org.freedesktop.appearance" and key == "color-scheme" then
-                                                      local new_scheme = (val == 1) and "dark" or "light"
-                                                      if new_scheme ~= current_scheme then
-                                                          current_scheme = new_scheme
-                                                          apply_colors(palette_name, new_scheme, custom_config)
-                                                      end
-                                                  end
-                                              end
-                                          )
-                                      end)
-                if success then
-                    dbus_subscribed = true
-                    -- Start a non-blocking timer to iterate the GLib main context
-                    local context = GLib.MainContext.default()
-                    hl.timer(function()
-                                 while context:iteration(false) do end
-                             end, { timeout = 1000, type = "repeat" })
-                end
-            end
-        end
-
-        -- Fallback polling if DBus library is not available or connection failed
-        if not dbus_subscribed then
-            hl.timer(function()
-                         local new_scheme = get_system_scheme()
-                         if new_scheme ~= current_scheme then
-                             current_scheme = new_scheme
-                             apply_colors(palette_name, new_scheme, custom_config)
-                         end
-                     end, { timeout = 3000, type = "repeat" })
-        end
+    -- If auto, follow dconf changes for the rest of the session. hyprland.start fires once,
+    -- so config reloads don't spawn extra watchers.
+    if auto_scheme then
+        hl.on("hyprland.start", function()
+            hl.exec_cmd(WATCHER_CMD)
+        end)
     end
 end
 
